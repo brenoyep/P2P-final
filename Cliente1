@@ -1,0 +1,50 @@
+import java.io.*;
+import java.net.*;
+
+public class Cliente1 {
+    public static void main(String[] args) {
+        String enderecoOutroCliente = "localhost";
+        int porta = 8080;
+
+        try {
+            Socket socket = new Socket("localhost", porta);
+            System.out.println("Conectado ao cliente: " + enderecoOutroCliente + " na porta: " + porta);
+            BufferedReader entradaServidor = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter saidaCliente = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
+
+            Thread threadReceber = new Thread(() -> {
+                try {
+                    String mensagem;
+                    while ((mensagem = entradaServidor.readLine()) != null) {
+                        System.out.println("Mensagem recebida: " + mensagem);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            threadReceber.start();
+
+            String mensagemCliente;
+            while (true) {
+                System.out.print("Digite sua mensagem: ");
+                mensagemCliente = teclado.readLine();
+                saidaCliente.println(mensagemCliente);
+
+                if (mensagemCliente.equalsIgnoreCase("sair")) {
+                    System.out.println("ConexÃ£o encerrada.");
+                    break;
+                }
+            }
+
+            entradaServidor.close();
+            saidaCliente.close();
+            socket.close();
+
+        } catch (IOException e) {
+            System.out.println("Erro ao conectar com o outro cliente: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+}
