@@ -1,0 +1,61 @@
+import java.io.*;
+import java.net.*;
+
+public class Server {
+    public static void main(String[] args) {
+        int porta = 8080;
+
+        try {
+            ServerSocket serverSocket = new ServerSocket(porta);
+            System.out.println("Servidor aguardando conexão na porta " + porta + " !");
+
+            Socket clienteSocket = serverSocket.accept();
+            System.out.println("Cliente conectado: " + clienteSocket.getInetAddress().getHostAddress());
+
+            BufferedReader entrada = new BufferedReader(new InputStreamReader(clienteSocket.getInputStream()));
+            PrintWriter saida = new PrintWriter(clienteSocket.getOutputStream(), true);
+
+            saida.println("Bem-vindo ao servidor! ");
+
+            Thread receberMensagens = new Thread(() -> {
+                try {
+                    String mensagemCliente;
+                    while (true) {
+                        mensagemCliente = entrada.readLine();
+                        if (mensagemCliente == null || mensagemCliente.equalsIgnoreCase("sair")) {
+                            System.out.println("Cliente pediu para sair.");
+                            break;  
+                        }
+                        System.out.println("Mensagem do cliente: " + mensagemCliente);
+                    }
+                } catch (IOException e) {
+                    System.out.println("Erro ao ler mensagem do cliente: " + e.getMessage());
+                }
+            });
+            receberMensagens.start();
+
+            BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
+            String mensagemServidor;
+            while (true) {
+                System.out.print("Digite uma mensagem para o cliente: ");
+                mensagemServidor = teclado.readLine();
+
+                if (mensagemServidor.equalsIgnoreCase("sair")) {
+                    saida.println("Servidor encerrou a conexão.");
+                    break;  
+                }
+
+                saida.println(mensagemServidor);
+            }
+
+            entrada.close();
+            saida.close();
+            clienteSocket.close();
+            serverSocket.close();
+
+        } catch (IOException e) {
+            System.out.println("Erro ao configurar o servidor: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+}
